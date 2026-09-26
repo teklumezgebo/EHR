@@ -33,18 +33,18 @@ Visual cues worth copying: red overdue icons, the encounter header ("9/2/2026 vi
 
 ## Tech stack
 
-Java 21 + Spring Boot 3 on the backend, React/TypeScript on the frontend, PostgreSQL for storage, and Docker/Terraform on Oracle Cloud's Always Free tier for production, so hosting costs $0.
+Java 21 + Spring Boot 4 on the backend, React/TypeScript on the frontend, PostgreSQL for storage, and Docker/Terraform for production. The hosting provider is decided near the end of the project (likely AWS).
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Language / framework | Java 21, Spring Boot 3.x, Gradle (Kotlin DSL) | Records, virtual threads; the stack hospital and payer backends actually run |
+| Language / framework | Java 21, Spring Boot 4.x, Gradle (Kotlin DSL) | Records, virtual threads; the stack hospital and payer backends actually run |
 | FHIR | HAPI FHIR (structures-r4, validation) | Industry-standard Java FHIR library; parse, serialize, validate R4 resources |
 | Security | Spring Security, OAuth2 Resource Server, JWT (Keycloak as IdP) | Real OIDC flow, roles as claims, SMART on FHIR scopes later |
 | Persistence | PostgreSQL 16, Spring Data JPA, Flyway migrations | Versioned schema; JSONB column for raw FHIR resources |
 | Frontend | React + TypeScript + Vite + Tailwind, TanStack Query | Reuses your existing MedChart frontend skills |
 | Testing | JUnit 5, Mockito, Testcontainers, REST Assured, Playwright | Unit, real-DB integration, API, and end-to-end UI tests |
 | Observability | Spring Actuator, Micrometer, structured JSON logs | Health checks for ECS, metrics for a demo dashboard |
-| Infra | Docker, docker-compose, GitHub Actions, GitHub Container Registry, Terraform (OCI provider), Oracle Cloud Always Free Arm VM, Caddy | $0 hosting that still shows infrastructure-as-code, CI/CD, and TLS |
+| Infra | Docker, docker-compose, GitHub Actions, GitHub Container Registry, Terraform, Caddy; cloud provider TBD (likely AWS) | Hosting that shows infrastructure-as-code, CI/CD, and TLS |
 | Docs | springdoc-openapi (Swagger UI) | Clickable API for reviewers |
 
 An AI chart summary (Synopsis tab) is an optional Phase 3 feature; the Claude API is pay-per-use, so keep it behind a feature flag and off by default.
@@ -136,7 +136,7 @@ Phase 1 is the demoable core: an MA can room a diabetes follow-up and a physicia
 
 ## Testing, containers, CI/CD, deployment, demo
 
-The production story is: every push runs tests against a real Postgres, builds a multi-arch image, and deploys to a free Oracle Cloud VM provisioned by Terraform, with automatic HTTPS.
+The production story is: every push runs tests against a real Postgres, builds a multi-arch image, and deploys to a cloud host provisioned by Terraform, with automatic HTTPS.
 
 | Area | Plan | Target |
 | --- | --- | --- |
@@ -147,11 +147,11 @@ The production story is: every push runs tests against a real Postgres, builds a
 | Security scans | OWASP Dependency-Check, Trivy image scan, CodeQL (all free for public repos) | No high/critical findings |
 | Containers | Multi-stage Dockerfile (Gradle build → distroless JRE 21), non-root user, built for amd64 + arm64 with Docker Buildx; `docker-compose.yml` with api, web, postgres, keycloak, caddy | `docker compose up` gives a working demo locally and in the cloud |
 | CI/CD | GitHub Actions: test → build → push to GitHub Container Registry → SSH deploy (`docker compose pull && up -d`) with a health-check gate | Deploy on merge to `main` |
-| Hosting | Oracle Cloud Always Free Ampere A1 VM (now 2 OCPU / 12 GB, cut from 4 / 24 in June 2026) running the compose stack; Postgres in a container with nightly `pg_dump` to Object Storage; Terraform OCI provider for VM, network, firewall | $0/month; set a $1 budget alert as a guard |
+| Hosting | Decided near the end of the project (likely AWS); provisioned with Terraform | TBD |
 | Domain + TLS | Free subdomain (DuckDNS) or `sslip.io`; Caddy gets Let's Encrypt certs automatically | HTTPS demo URL |
 | Demo | Seeded Synthea patients, one-click demo logins per role, 2-minute Loom walkthrough, README with architecture diagram and screenshots | Linked from resume and GitHub |
 
-Fallback if Oracle's free Arm capacity is unavailable in your region: keep the full stack runnable with `docker compose up` and demo from a recording. The Terraform and CI pipeline still show the production skills. [Oracle free-tier change](https://terminalbytes.com/oracle-cloud-free-tier-changes-2026)
+Fallback if hosting is unavailable: keep the full stack runnable with `docker compose up` and demo from a recording. The Terraform and CI pipeline still show the production skills.
 
 ## Where to start
 

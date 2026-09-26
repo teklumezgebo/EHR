@@ -1,0 +1,32 @@
+// Builds the dev container image from source. CI publishes it to GHCR.
+{
+  "name": "EHR (build from source)",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=ehr-gradle-cache,target=/home/vscode/.gradle,type=volume"
+  ],
+  "containerEnv": {
+    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal"
+  },
+  // API and Vite. Compose services publish their ports on the host directly.
+  "forwardPorts": [8080, 5173],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-spring-boot",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "hashicorp.terraform"
+      ]
+    }
+  },
+  // The workspace is mounted at its host path so Compose and Testcontainers bind mounts resolve.
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"]
+}

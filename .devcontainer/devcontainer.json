@@ -1,0 +1,9 @@
+// Uses the prebuilt image. Settings from build/devcontainer.json are carried in its labels.
+{
+  "name": "EHR",
+  "image": "ghcr.io/teklumezgebo/ehr-devcontainer:latest",
+  // Workspace mount and run args are not stored in image labels, so they are repeated here.
+  "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+  "workspaceFolder": "${localWorkspaceFolder}",
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"]
+}
