@@ -49,6 +49,7 @@ jobs:
             terraform version
             gh --version
             psql --version
+            claude --version
 
   merge:
     needs: build

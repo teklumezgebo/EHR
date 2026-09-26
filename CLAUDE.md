@@ -7,3 +7,6 @@ https://mitcommlab.mit.edu/broad/commkit/coding-and-comment-style/
 Always make sure to ask any clarifying questions. Dont ask soley to fufill the requiement only when there is genuine confusion or need guidance.
 
 Refer to the spec for guidance and understand that it is a living document. Feel free to push back if there is a design choice that chould be better. The goal at the end of the day is to have an EHR experience similar to a training experience on Epic. Seeded data that you can still interact with and show functionality.
+
+review my uncommitted changes and flag anything that looks risky before I commit
+

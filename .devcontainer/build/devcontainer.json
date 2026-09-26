@@ -3,14 +3,18 @@
   "name": "EHR (build from source)",
   "build": { "dockerfile": "Dockerfile" },
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
   },
   "remoteUser": "vscode",
   "mounts": [
-    "source=ehr-gradle-cache,target=/home/vscode/.gradle,type=volume"
+    "source=ehr-gradle-cache,target=/home/vscode/.gradle,type=volume",
+    "source=ehr-claude-config,target=/home/vscode/.claude,type=volume"
   ],
+  // CLAUDE_CONFIG_DIR keeps .claude.json in the volume so sign-in survives rebuilds.
   "containerEnv": {
-    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal"
+    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
   },
   // API and Vite. Compose services publish their ports on the host directly.
   "forwardPorts": [8080, 5173],
