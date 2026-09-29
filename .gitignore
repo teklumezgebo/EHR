@@ -1,0 +1,41 @@
+# Gradle
+.gradle/
+**/build/
+!**/src/**/build/
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Java
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# Node and Vite
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.eslintcache
+npm-debug.log*
+
+# Environment files hold secrets; commit .env.example instead.
+.env
+.env.*
+!.env.example
+
+# Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.iml
+out/
+bin/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store

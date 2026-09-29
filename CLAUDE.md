@@ -10,3 +10,16 @@ Refer to the spec for guidance and understand that it is a living document. Feel
 
 review my uncommitted changes and flag anything that looks risky before I commit
 
+This project should be as close to production as possible, in a feasible way.
+
+These are the main points of this project that are in my resume:
+
+•
+Architected backend infrastructure for a HIPAA-compliant digital health platform processing FHIR R4 patient records and
+integrating with EHR systems
+•
+Built an append-only audit logging system capturing user ID, action type, resource type, and timestamp on every PHI access
+event across all protected routes, modeled on HIPAA audit requirements
+•
+Engineered a role-based caretaker access system with secure patient data delegation, enforcing HIPAA privacy compliance
+across multi-user clinical relationship
