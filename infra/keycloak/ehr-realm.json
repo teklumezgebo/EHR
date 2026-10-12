@@ -1,0 +1,124 @@
+{
+  "realm": "ehr",
+  "displayName": "EHR",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 900,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "PHYSICIAN",
+        "description": "Full chart, orders, notes, signing"
+      },
+      {
+        "name": "MA_NURSE",
+        "description": "Rooming, vitals, intake, med reconciliation"
+      },
+      {
+        "name": "AUDITOR",
+        "description": "Read-only access to the PHI audit log"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ehr-web",
+      "name": "EHR Web",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "ehr-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "ehr-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "6f1c2a10-0001-4c8e-9a51-000000000001",
+      "username": "physician",
+      "email": "physician@ehr.local",
+      "emailVerified": true,
+      "firstName": "Maya",
+      "lastName": "Chen",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "PHYSICIAN"
+      ]
+    },
+    {
+      "id": "6f1c2a10-0002-4c8e-9a51-000000000002",
+      "username": "nurse",
+      "email": "nurse@ehr.local",
+      "emailVerified": true,
+      "firstName": "Luis",
+      "lastName": "Ortega",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "MA_NURSE"
+      ]
+    },
+    {
+      "id": "6f1c2a10-0003-4c8e-9a51-000000000003",
+      "username": "auditor",
+      "email": "auditor@ehr.local",
+      "emailVerified": true,
+      "firstName": "Priya",
+      "lastName": "Nair",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "AUDITOR"
+      ]
+    }
+  ]
+}

@@ -8,8 +8,6 @@ Always make sure to ask any clarifying questions. Dont ask soley to fufill the r
 
 Refer to the spec for guidance and understand that it is a living document. Feel free to push back if there is a design choice that chould be better. The goal at the end of the day is to have an EHR experience similar to a training experience on Epic. Seeded data that you can still interact with and show functionality.
 
-review my uncommitted changes and flag anything that looks risky before I commit
-
 This project should be as close to production as possible, in a feasible way.
 
 These are the main points of this project that are in my resume:

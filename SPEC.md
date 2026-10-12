@@ -12,7 +12,7 @@ Every resume bullet must be provable by something a reviewer can click, read in 
 | --- | --- |
 | Backend for a HIPAA-aligned platform processing FHIR R4 records and integrating with EHR systems | `/fhir/r4` endpoints (Patient, Encounter, Condition, Observation, MedicationRequest, AllergyIntolerance, Immunization) validated with HAPI FHIR; a SMART on FHIR import from a public sandbox (Epic or HAPI test server) |
 | Append-only audit log on every PHI access | DB-level insert-only table (no UPDATE/DELETE grants, trigger guard), written by an AOP aspect on every protected route; integration tests assert a row per access |
-| Role-based access control across clinical roles with care-team scoping | Physician, MA, front desk, patient, and admin roles; care-team relationship checks; break-the-glass with admin review; tests proving each role is denied outside its permissions |
+| Role-based access control across clinical roles with care-team scoping | Physician and MA/nurse roles with a per-action permission matrix; care-team relationship checks; tests proving each role is denied outside its permissions |
 
 Wording note: say "modeled on HIPAA Security Rule controls" rather than "HIPAA-compliant". Compliance is an organizational certification a portfolio project cannot hold, and interviewers in health tech notice.
 
@@ -87,21 +87,21 @@ Use coded vocabularies (ICD-10, LOINC, RxNorm, CVX) from small seeded subsets ra
 
 ## Security and compliance
 
-Access is decided by role plus relationship: a user sees a chart only if their role allows the action and they are on the patient's care team.
+Access is decided by role plus relationship: a user may perform an action only if their role grants it and they are on the patient's active care team. Two roles keep the matrix small: PHYSICIAN (Epic provider) and MA\_NURSE (Epic MA security class).
 
-| Role | Can do | Epic analogue |
+| Permission | PHYSICIAN | MA\_NURSE |
 | --- | --- | --- |
-| PHYSICIAN | Everything clinical on care-team patients; sign encounters; place orders | Provider |
-| MA / NURSE | Rooming: vitals, allergies, med review, reason for visit, HM updates; cannot sign | MA security class |
-| FRONT\_DESK | Demographics, scheduling; no clinical data | Registration |
-| PATIENT | Own chart, read-only portal view | MyChart |
-| ADMIN | Users, roles, audit review; no clinical reads without break-the-glass | Security admin |
+| Read chart (Storyboard, Chart Review, results) | Yes | Yes |
+| Room a visit: reason for visit, vitals, allergies, medication review, HM updates | Yes | Yes |
+| Write and edit the visit note | Yes | No |
+| Sign an encounter | Yes | No |
+| Place orders and add diagnoses | Yes | No |
 
-**Audit log.** A Spring AOP aspect on an `@PhiAccess` annotation writes an `audit_event` row for every read and write of PHI, including denied attempts. The app's DB user has INSERT and SELECT only on that table; a trigger rejects UPDATE/DELETE. Each row stores the hash of the previous row, so tampering is detectable by a verify endpoint.
+Every permission is checked per patient against the care team; a role alone never grants access.
 
-**Break-the-glass.** Out-of-relationship access requires a typed reason, is logged at high severity, and appears in an admin review queue, like Epic's.
+**Audit log.** A Spring AOP aspect on an `@PhiAccess` annotation writes an `audit_event` row for every read and write of PHI, including denied attempts. Opening a chart is one request and one audit row: `GET /api/patients/{id}` returns the Storyboard and SnapShot (demographics, problems, allergies) together, and those sections have no endpoints of their own. Activities opened later (notes, encounters, results) load on demand and are audited as their own accesses, like Epic's access log. The app's DB user has INSERT and SELECT only on that table; a trigger rejects UPDATE/DELETE. Each row stores the hash of the previous row, so tampering is detectable by a verify endpoint.
 
-**PHI handling controls modeled on the HIPAA Security Rule:** TLS everywhere (Caddy + Let's Encrypt), encrypted block volume, secrets in GitHub Actions secrets and a root-only env file on the VM, 15-minute session timeout, no PHI in application logs, minimum-necessary field filtering per role. Use only synthetic patients (Synthea generates realistic FHIR bundles).
+**PHI handling controls modeled on the HIPAA Security Rule:** TLS everywhere (Caddy + Let's Encrypt), encrypted block volume, secrets in GitHub Actions secrets and a root-only env file on the VM, 15-minute session timeout, no PHI in application logs, minimum-necessary access per permission. Use only synthetic patients (Synthea generates realistic FHIR bundles).
 
 ## Feature backlog by phase
 
@@ -114,7 +114,7 @@ Phase 1 is the demoable core: an MA can room a diabetes follow-up and a physicia
 - [ ] Encounter creation and header ("visit with … for Office Visit – reason")
 - [ ] Rooming: Reason for Visit, Vitals (BP, HR, temp, weight, BMI auto-calc), Allergies, Medication Review
 - [ ] SOAP note editor; Sign Visit locks encounter and note
-- [ ] Audit aspect on all PHI routes + insert-only table + admin audit viewer
+- [ ] Audit aspect on all PHI routes + insert-only table + per-patient access log view
 - [ ] Care-team relationship check on every chart read
 
 **Phase 2 — Epic depth**
@@ -123,7 +123,6 @@ Phase 1 is the demoable core: an MA can room a diabetes follow-up and a physicia
 - [ ] Chart Review tab: encounters, labs, notes, filterable tables
 - [ ] Results trending (A1c, BP) as a line chart
 - [ ] Orders + Dx: Add Order (lab, med, immunization) and Add Dx with ICD-10 search
-- [ ] Break-the-glass access with admin review queue; read-only patient portal view
 - [ ] In Basket: results to review, unsigned notes
 
 **Phase 3 — Interoperability and polish**
@@ -143,7 +142,7 @@ The production story is: every push runs tests against a real Postgres, builds a
 | Unit tests | JUnit 5 + Mockito on services, HM rules, access policy | ≥ 80% line coverage on `access`, `audit`, `healthmaintenance` (JaCoCo gate) |
 | Integration tests | Testcontainers Postgres + Keycloak; REST Assured per endpoint | Every protected route has an "allowed", "denied", and "audited" test |
 | FHIR tests | HAPI validator on every outbound resource | Zero validation errors |
-| E2E | Playwright: MA rooms visit → physician signs → front desk is denied clinical data | Runs in CI on the docker-compose stack |
+| E2E | Playwright: MA rooms visit → physician signs → MA is denied signing | Runs in CI on the docker-compose stack |
 | Security scans | OWASP Dependency-Check, Trivy image scan, CodeQL (all free for public repos) | No high/critical findings |
 | Containers | Multi-stage Dockerfile (Gradle build → distroless JRE 21), non-root user, built for amd64 + arm64 with Docker Buildx; `docker-compose.yml` with api, web, postgres, keycloak, caddy | `docker compose up` gives a working demo locally and in the cloud |
 | CI/CD | GitHub Actions: test → build → push to GitHub Container Registry → SSH deploy (`docker compose pull && up -d`) with a health-check gate | Deploy on merge to `main` |
@@ -158,7 +157,7 @@ Fallback if hosting is unavailable: keep the full stack runnable with `docker co
 Start with the audit log and access policy, not the UI: they are the hardest to retrofit and they carry two of your three bullets.
 
 1. Generate the project at start.spring.io: Java 21, Gradle, Web, Security, OAuth2 Resource Server, Data JPA, Flyway, PostgreSQL, Validation, Actuator. Add HAPI FHIR and Testcontainers.
-2. Write `docker-compose.yml` with Postgres and Keycloak; create a realm with the six roles and one demo user each.
+2. Write `docker-compose.yml` with Postgres and Keycloak; create a realm with the PHYSICIAN and MA\_NURSE roles and one demo user each.
 3. Flyway `V1__core.sql`: patient, app\_user, care\_team\_member, encounter, audit\_event (plus the no-update/no-delete trigger and grants).
 4. Build `GET /api/patients/{id}` guarded by an `AccessPolicy` bean (role + care-team check) and annotated `@PhiAccess`.
 5. Implement the audit aspect; write three Testcontainers tests: care-team physician allowed, other physician denied, both produce audit rows.
@@ -169,7 +168,7 @@ The first milestone is one vertical slice: login → open a patient → see the 
 
 ## Open questions
 
-Decided: this is a separate new project, not a MedChart rewrite; no fixed timeline, so phases are ordered but undated; hosting uses free options only; the frontend stays React/TypeScript; caretaker access is out of scope, so roles are physician, MA/nurse, front desk, patient, and admin.
+Decided: this is a separate new project, not a MedChart rewrite; no fixed timeline, so phases are ordered but undated; hosting uses free options only; the frontend stays React/TypeScript; caretaker access is out of scope, and roles are limited to physician and MA/nurse; front desk, patient portal, admin, and break-the-glass are deferred.
 
 - [x] Is this a Java rewrite of the existing Node/TypeScript MedChart (reusing its React frontend), or a separate second project?
 - [x] Frontend: keep React/TypeScript, or go server-rendered (Thymeleaf/Vaadin) to stay all-Java?
