@@ -1,15 +1,18 @@
 :root {
-  --bar: #1f4e79;
-  --bar-text: #ffffff;
-  --tab: #dce6f0;
-  --tab-active: #ffffff;
-  --sidebar: #2c3e50;
-  --sidebar-text: #ecf0f1;
-  --bg: #f4f6f8;
-  --border: #c8d2dc;
-  --text: #1c2833;
-  --muted: #6b7a89;
-  --alert: #c0392b;
+  --bar: #16324f;
+  --bar-text: #e6edf3;
+  --tab: #1c2633;
+  --tab-active: #263345;
+  --sidebar: #121a24;
+  --sidebar-text: #d6dde5;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --alert: #f47067;
+  --alert-bg: #b62324;
+  color-scheme: dark;
   font: 14px/1.4 system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -48,17 +51,20 @@ button { font: inherit; cursor: pointer; }
 main { flex: 1; display: flex; }
 
 .lookup { padding: 16px; width: 100%; max-width: 560px; }
-.lookup table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 12px; }
+.lookup table { width: 100%; border-collapse: collapse; background: var(--surface); margin-bottom: 12px; }
 .lookup th, .lookup td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
 .lookup tbody tr { cursor: pointer; }
 .lookup tbody tr:hover { background: var(--tab); }
 .lookup form { display: flex; gap: 8px; }
-.lookup input { flex: 1; padding: 4px 8px; border: 1px solid var(--border); }
+.lookup input {
+  flex: 1; padding: 4px 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text);
+}
 
 .audit { padding: 16px; width: 100%; }
 .audit-head { display: flex; align-items: center; gap: 12px; }
 .audit-scroll { overflow-x: auto; margin-bottom: 12px; }
-.audit table { width: 100%; border-collapse: collapse; background: #fff; }
+.audit table { width: 100%; border-collapse: collapse; background: var(--surface); }
 .audit th, .audit td {
   text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap;
 }
@@ -76,15 +82,15 @@ main { flex: 1; display: flex; }
 .storyboard dd { margin: 0; }
 .photo {
   width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
-  background: #5d7b99; font-size: 22px; font-weight: 600;
+  background: #2f4a66; font-size: 22px; font-weight: 600;
 }
-.code { display: inline-block; padding: 2px 8px; border-radius: 3px; background: #3e5871; }
-.code.alert { background: var(--alert); font-weight: 700; }
+.code { display: inline-block; padding: 2px 8px; border-radius: 3px; background: #24364a; }
+.code.alert { background: var(--alert-bg); font-weight: 700; }
 .allergy-flag {
   margin: 0 0 12px; padding: 3px 8px; border-radius: 3px;
-  background: #f4d03f; color: var(--text); font-weight: 700;
+  background: #f4d03f; color: #1c2833; font-weight: 700;
 }
-.allergy-flag.none { background: #3e5871; color: var(--sidebar-text); font-weight: 400; }
+.allergy-flag.none { background: #24364a; color: var(--sidebar-text); font-weight: 400; }
 
 .activity { flex: 1; min-width: 0; padding: 0 16px 16px; }
 .activity-tabs { display: flex; gap: 2px; padding-top: 8px; border-bottom: 1px solid var(--border); }
@@ -94,7 +100,7 @@ main { flex: 1; display: flex; }
   display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px;
   padding-top: 12px; align-items: start;
 }
-.card { background: #fff; border: 1px solid var(--border); border-radius: 4px; overflow-x: auto; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow-x: auto; }
 .card h3 {
   margin: 0; padding: 6px 10px; font-size: 13px;
   background: var(--tab); border-bottom: 1px solid var(--border);
@@ -106,10 +112,13 @@ main { flex: 1; display: flex; }
 .card .inactive td { color: var(--muted); }
 .card .severe { color: var(--alert); font-weight: 600; }
 .card .empty { margin: 0; padding: 10px; color: var(--muted); }
+.labs { grid-column: 1 / -1; }
+.card .abnormal { color: var(--alert); font-weight: 600; }
+.card .panel td { background: var(--bg); font-weight: 600; font-size: 12px; }
 
 .banner {
   margin: 16px; padding: 10px 14px; height: fit-content;
-  background: #fdecea; border-left: 4px solid var(--alert); color: var(--alert);
+  background: #3a1d1d; border-left: 4px solid var(--alert); color: var(--alert);
 }
 .muted { color: var(--muted); padding: 16px; }
 

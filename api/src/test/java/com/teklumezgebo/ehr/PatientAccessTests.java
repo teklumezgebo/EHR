@@ -59,6 +59,12 @@ class PatientAccessTests {
 		jdbc.sql("insert into allergy (patient_id, substance, severity) values (?, 'Penicillin', 'severe')")
 			.param(patientId)
 			.update();
+		for (String[] result : new String[][] { { "8.1", "2026-05-01" }, { "7.4", "2026-08-01" } }) {
+			jdbc.sql("""
+					insert into observation (patient_id, category, loinc, display, value, unit, ref_high, taken_at)
+					values (?, 'laboratory', '4548-4', 'Hemoglobin A1c', ?::numeric, '%', 5.6, ?::timestamptz)
+					""").params(patientId, result[0], result[1]).update();
+		}
 	}
 
 	@Test
@@ -70,6 +76,9 @@ class PatientAccessTests {
 				assertThat(chart).extractingPath("$.patient.pcpName").isEqualTo("Test User");
 				assertThat(chart).extractingPath("$.problems[0].icd10").isEqualTo("I10");
 				assertThat(chart).extractingPath("$.allergies[0].substance").isEqualTo("Penicillin");
+				// Only the latest result per LOINC code is returned.
+				assertThat(chart).extractingPath("$.labs.length()").isEqualTo(1);
+				assertThat(chart).extractingPath("$.labs[0].value").isEqualTo(7.4);
 			});
 		assertThat(auditOutcomes(careTeamPhysician)).containsExactly("SUCCESS");
 		assertThat(jdbc.sql("select count(*) from audit_event where user_id = ?")

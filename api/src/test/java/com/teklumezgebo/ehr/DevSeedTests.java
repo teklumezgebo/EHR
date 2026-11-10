@@ -23,4 +23,10 @@ class DevSeedTests {
 		assertThat(jdbc.queryForObject("select count(*) from patient", Integer.class)).isEqualTo(4);
 	}
 
+	/** Each seeded result must match exactly one reference range, or the join drops or doubles it. */
+	@Test
+	void seedsEveryLabResultOnce() {
+		assertThat(jdbc.queryForObject("select count(*) from observation", Integer.class)).isEqualTo(95);
+	}
+
 }

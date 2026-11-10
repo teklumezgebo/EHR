@@ -3,6 +3,7 @@ package com.teklumezgebo.ehr.patient;
 import com.teklumezgebo.ehr.audit.PhiAccess;
 import com.teklumezgebo.ehr.clinical.ClinicalLists;
 import com.teklumezgebo.ehr.clinical.ClinicalLists.Allergy;
+import com.teklumezgebo.ehr.clinical.ClinicalLists.LabResult;
 import com.teklumezgebo.ehr.clinical.ClinicalLists.Problem;
 import java.time.LocalDate;
 import java.util.List;
@@ -23,7 +24,7 @@ class PatientController {
 	}
 
 	/** Everything shown when a chart is opened, returned together so the open is one audited access. */
-	record Chart(PatientSummary patient, List<Problem> problems, List<Allergy> allergies) {
+	record Chart(PatientSummary patient, List<Problem> problems, List<Allergy> allergies, List<LabResult> labs) {
 	}
 
 	private final JdbcClient jdbc;
@@ -45,7 +46,8 @@ class PatientController {
 				left join app_user pcp on pcp.id = p.pcp_id
 				where p.id = ?
 				""").param(patientId).query(PatientSummary.class).single();
-		return new Chart(patient, clinicalLists.problems(patientId), clinicalLists.allergies(patientId));
+		return new Chart(patient, clinicalLists.problems(patientId), clinicalLists.allergies(patientId),
+				clinicalLists.recentLabs(patientId));
 	}
 
 }

@@ -76,7 +76,7 @@ Modules (Java packages): `patient`, `encounter`, `clinical` (problems, allergies
 | problem | id, patient\_id, icd10, description, onset, status | Condition |
 | allergy | id, patient\_id, substance, reaction, severity | AllergyIntolerance |
 | medication\_order | id, patient\_id, rxnorm, sig, status, prescriber\_id | MedicationRequest |
-| observation | id, patient\_id, encounter\_id, loinc, value, unit, taken\_at | Observation (vitals, A1c) |
+| observation | id, patient\_id, encounter\_id, category, loinc, display, panel, value, unit, ref\_low, ref\_high, taken\_at | Observation (labs, vitals) |
 | immunization | id, patient\_id, cvx, given\_on | Immunization |
 | note | id, encounter\_id, author\_id, type (SOAP), body, signed\_at | DocumentReference |
 | hm\_topic / hm\_status | rule definition; per-patient due/overdue/done | derived |
@@ -99,7 +99,7 @@ Access is decided by role plus relationship: a user may perform an action only i
 
 Every permission is checked per patient against the care team; a role alone never grants access.
 
-**Audit log.** A Spring AOP aspect on an `@PhiAccess` annotation writes an `audit_event` row for every read and write of PHI, including denied attempts. Opening a chart is one request and one audit row: `GET /api/patients/{id}` returns the Storyboard and SnapShot (demographics, problems, allergies) together, and those sections have no endpoints of their own. Activities opened later (notes, encounters, results) load on demand and are audited as their own accesses, like Epic's access log. The app's DB user has INSERT and SELECT only on that table; a trigger rejects UPDATE/DELETE. Each row stores the hash of the previous row, so tampering is detectable by a verify endpoint.
+**Audit log.** A Spring AOP aspect on an `@PhiAccess` annotation writes an `audit_event` row for every read and write of PHI, including denied attempts. Opening a chart is one request and one audit row: `GET /api/patients/{id}` returns the Storyboard and SnapShot (demographics, problems, allergies, latest result per lab) together, and those sections have no endpoints of their own. Activities opened later (notes, encounters, results) load on demand and are audited as their own accesses, like Epic's access log. The app's DB user has INSERT and SELECT only on that table; a trigger rejects UPDATE/DELETE. Each row stores the hash of the previous row, so tampering is detectable by a verify endpoint.
 
 **PHI handling controls modeled on the HIPAA Security Rule:** TLS everywhere (Caddy + Let's Encrypt), encrypted block volume, secrets in GitHub Actions secrets and a root-only env file on the VM, 15-minute session timeout, no PHI in application logs, minimum-necessary access per permission. Use only synthetic patients (Synthea generates realistic FHIR bundles).
 
