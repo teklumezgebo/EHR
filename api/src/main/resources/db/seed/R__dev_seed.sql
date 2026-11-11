@@ -27,15 +27,15 @@ insert into care_team_member (patient_id, user_id) values
     ('c0ffee00-0004-4a7b-8000-000000000004', '6f1c2a10-0101-4c8e-9a51-000000000101')
 on conflict do nothing;
 
-insert into encounter (id, patient_id, provider_id, department, type, reason, status, start_at, signed_at) values
+insert into encounter (id, patient_id, provider_id, department, type, reason, status, start_at, signed_at, signed_by) values
     ('e0000000-0001-4d00-8000-000000000001', 'c0ffee00-0001-4a7b-8000-000000000001', '6f1c2a10-0001-4c8e-9a51-000000000001',
-     'Family Medicine', 'Office Visit', 'Diabetes Follow Up', 'SIGNED', '2026-06-02 09:00-04', '2026-06-02 09:45-04'),
+     'Family Medicine', 'Office Visit', 'Diabetes Follow Up', 'SIGNED', '2026-06-02 09:00-04', '2026-06-02 09:45-04', '6f1c2a10-0001-4c8e-9a51-000000000001'),
     ('e0000000-0002-4d00-8000-000000000002', 'c0ffee00-0001-4a7b-8000-000000000001', '6f1c2a10-0001-4c8e-9a51-000000000001',
-     'Family Medicine', 'Office Visit', 'Diabetes Follow Up', 'OPEN', '2026-09-02 09:00-04', null),
+     'Family Medicine', 'Office Visit', 'Diabetes Follow Up', 'OPEN', '2026-09-02 09:00-04', null, null),
     ('e0000000-0003-4d00-8000-000000000003', 'c0ffee00-0002-4a7b-8000-000000000002', '6f1c2a10-0001-4c8e-9a51-000000000001',
-     'Family Medicine', 'Office Visit', 'Hypertension Check', 'SIGNED', '2026-08-14 14:30-04', '2026-08-14 15:10-04'),
+     'Family Medicine', 'Office Visit', 'Hypertension Check', 'SIGNED', '2026-08-14 14:30-04', '2026-08-14 15:10-04', '6f1c2a10-0001-4c8e-9a51-000000000001'),
     ('e0000000-0004-4d00-8000-000000000004', 'c0ffee00-0004-4a7b-8000-000000000004', '6f1c2a10-0101-4c8e-9a51-000000000101',
-     'Endocrinology', 'Office Visit', 'Thyroid Nodule Follow Up', 'SIGNED', '2026-07-09 10:00-04', '2026-07-09 10:40-04')
+     'Endocrinology', 'Office Visit', 'Thyroid Nodule Follow Up', 'SIGNED', '2026-07-09 10:00-04', '2026-07-09 10:40-04', '6f1c2a10-0101-4c8e-9a51-000000000101')
 on conflict do nothing;
 
 insert into problem (id, patient_id, icd10, description, onset, status) values
@@ -160,4 +160,73 @@ from result r
 join draw d on d.key = r.draw
 join patient p on p.id = d.patient_id
 join code c on c.loinc = r.loinc and (c.sex is null or c.sex = p.sex)
+on conflict do nothing;
+
+-- Rooming vitals for each seeded visit, in the units the API accepts (see EncounterController).
+-- Sam Rivera's open 9/2 visit has vitals but no notes yet, so it can be documented and signed.
+with vital_code (loinc, display, panel, unit) as (values
+    ('8480-6',  'Systolic blood pressure', 'Blood Pressure', 'mm[Hg]'),
+    ('8462-4',  'Diastolic blood pressure', 'Blood Pressure', 'mm[Hg]'),
+    ('8867-4',  'Heart rate', null, '/min'),
+    ('9279-1',  'Respiratory rate', null, '/min'),
+    ('8310-5',  'Body temperature', null, '[degF]'),
+    ('59408-5', 'Oxygen saturation by pulse oximetry', null, '%'),
+    ('29463-7', 'Body weight', null, '[lb_av]'),
+    ('8302-2',  'Body height', null, '[in_i]'),
+    ('39156-5', 'Body mass index', null, 'kg/m2')
+),
+vital_set (key, encounter_id, taken_at) as (values
+    ('sam-0602',   'e0000000-0001-4d00-8000-000000000001'::uuid, '2026-06-02 09:08-04'::timestamptz),
+    ('sam-0902',   'e0000000-0002-4d00-8000-000000000002', '2026-09-02 09:06-04'),
+    ('rosa-0814',  'e0000000-0003-4d00-8000-000000000003', '2026-08-14 14:38-04'),
+    ('helen-0709', 'e0000000-0004-4d00-8000-000000000004', '2026-07-09 10:07-04')
+),
+vital (set_key, loinc, value) as (values
+    -- BMI is 703 x lb / in^2, matching what the API computes.
+    ('sam-0602', '8480-6', 142::numeric), ('sam-0602', '8462-4', 88), ('sam-0602', '8867-4', 78),
+    ('sam-0602', '9279-1', 16), ('sam-0602', '8310-5', 98.2), ('sam-0602', '59408-5', 98),
+    ('sam-0602', '29463-7', 214), ('sam-0602', '8302-2', 70), ('sam-0602', '39156-5', 30.7),
+    ('sam-0902', '8480-6', 134), ('sam-0902', '8462-4', 84), ('sam-0902', '8867-4', 74),
+    ('sam-0902', '9279-1', 16), ('sam-0902', '8310-5', 98.4), ('sam-0902', '59408-5', 97),
+    ('sam-0902', '29463-7', 208), ('sam-0902', '8302-2', 70), ('sam-0902', '39156-5', 29.8),
+    ('rosa-0814', '8480-6', 156), ('rosa-0814', '8462-4', 92), ('rosa-0814', '8867-4', 82),
+    ('rosa-0814', '9279-1', 18), ('rosa-0814', '8310-5', 97.9), ('rosa-0814', '59408-5', 96),
+    ('rosa-0814', '29463-7', 168), ('rosa-0814', '8302-2', 62), ('rosa-0814', '39156-5', 30.7),
+    ('helen-0709', '8480-6', 128), ('helen-0709', '8462-4', 76), ('helen-0709', '8867-4', 88),
+    ('helen-0709', '9279-1', 14), ('helen-0709', '8310-5', 98.0), ('helen-0709', '59408-5', 98),
+    ('helen-0709', '29463-7', 118), ('helen-0709', '8302-2', 61), ('helen-0709', '39156-5', 22.3)
+)
+insert into observation (id, patient_id, encounter_id, category, loinc, display, panel, value, unit, taken_at)
+select md5(s.key || v.loinc)::uuid, e.patient_id, e.id, 'vital-signs', v.loinc, c.display, c.panel, v.value,
+       c.unit, s.taken_at
+from vital v
+join vital_set s on s.key = v.set_key
+join encounter e on e.id = s.encounter_id
+join vital_code c on c.loinc = v.loinc
+on conflict do nothing;
+
+-- Signed notes for the signed visits: the MA's rooming note and the provider's progress note.
+insert into note (id, encounter_id, author_id, type, subjective, objective, assessment, plan, updated_at, signed_at) values
+    ('d0000000-0001-4e00-8000-000000000001', 'e0000000-0001-4d00-8000-000000000001', '6f1c2a10-0002-4c8e-9a51-000000000002',
+     'ROOMING', 'Here for diabetes follow up. Checks sugars most mornings, 140s-180s. No lows.',
+     'Vitals taken. Medications and allergies reviewed with patient.', '', '',
+     '2026-06-02 09:12-04', '2026-06-02 09:12-04'),
+    ('d0000000-0002-4e00-8000-000000000002', 'e0000000-0001-4d00-8000-000000000001', '6f1c2a10-0001-4c8e-9a51-000000000001',
+     'PROGRESS', 'Type 2 diabetes follow up. Taking metformin 1000 mg twice daily. Reports mild fatigue, no polyuria or vision change.',
+     'BP 142/88, BMI 30.7. A1c 8.1% (5/28). Feet: intact sensation, no ulcers.',
+     'Type 2 diabetes above goal. Hypertension not at goal. Hyperlipidemia.',
+     'Start empagliflozin 10 mg daily. Recheck A1c in 3 months. Reinforce diet and walking. Follow up 3 months.',
+     '2026-06-02 09:44-04', '2026-06-02 09:44-04'),
+    ('d0000000-0003-4e00-8000-000000000003', 'e0000000-0003-4d00-8000-000000000003', '6f1c2a10-0001-4c8e-9a51-000000000001',
+     'PROGRESS', 'Hypertension check. Taking amlodipine. Occasional ankle swelling. Interpreter used (Spanish).',
+     'BP 156/92, repeat 150/90. Trace bilateral ankle edema. K 5.4, eGFR 40 (8/10).',
+     'Hypertension not at goal. CKD stage 3b with rising potassium.',
+     'Increase amlodipine to 10 mg. Avoid ACE inhibitors (angioedema history). Low-potassium diet handout. Nephrology referral. Repeat BMP in 4 weeks.',
+     '2026-08-14 15:08-04', '2026-08-14 15:08-04'),
+    ('d0000000-0004-4e00-8000-000000000004', 'e0000000-0004-4d00-8000-000000000004', '6f1c2a10-0101-4c8e-9a51-000000000101',
+     'PROGRESS', 'Thyroid nodule follow up. No neck pain, hoarseness, or trouble swallowing.',
+     'Neck: small nontender right thyroid nodule, unchanged. TSH 0.38 (7/2), free T4 normal.',
+     'Stable nontoxic thyroid nodule. Mildly suppressed TSH, likely subclinical.',
+     'Repeat thyroid ultrasound in 12 months. Recheck TSH and free T4 in 3 months.',
+     '2026-07-09 10:38-04', '2026-07-09 10:38-04')
 on conflict do nothing;

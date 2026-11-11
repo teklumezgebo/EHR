@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { apiFetch } from '../auth.ts'
+import { apiJson } from '../auth.ts'
+import Encounters, { type CareTeamMember } from './Encounters.tsx'
 
 type PatientSummary = {
   id: string
@@ -44,6 +45,7 @@ type LabResult = {
 
 type ChartData = {
   patient: PatientSummary
+  careTeam: CareTeamMember[]
   problems: Problem[]
   allergies: Allergy[]
   labs: LabResult[]
@@ -59,25 +61,14 @@ function age(birthDate: string): number {
   return now.getFullYear() - year - (hadBirthday ? 0 : 1)
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
-  const res = await apiFetch(path)
-  if (!res.ok) {
-    throw new Error(
-      res.status === 403
-        ? 'Access denied. You are not on this patient’s care team. This attempt was audited.'
-        : `Request failed (${res.status})`,
-    )
-  }
-  return (await res.json()) as T
-}
-
 export default function Chart({ patientId }: { patientId: string }) {
   const [data, setData] = useState<ChartData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [activity, setActivity] = useState<'snapshot' | 'encounters'>('snapshot')
 
   useEffect(() => {
     let cancelled = false
-    fetchJson<ChartData>(`/api/patients/${encodeURIComponent(patientId)}`)
+    apiJson<ChartData>(`/api/patients/${encodeURIComponent(patientId)}`)
       .then((chart) => !cancelled && setData(chart))
       .catch((e: Error) => !cancelled && setError(e.message))
     return () => {
@@ -88,7 +79,7 @@ export default function Chart({ patientId }: { patientId: string }) {
   if (error) return <p className="banner">{error}</p>
   if (!data) return <p className="muted">Loading…</p>
 
-  const { patient, problems, allergies, labs } = data
+  const { patient, careTeam, problems, allergies, labs } = data
     return (
       <div className="chart">
         <aside className="storyboard">
@@ -123,9 +114,24 @@ export default function Chart({ patientId }: { patientId: string }) {
         </aside>
         <section className="activity">
           <nav className="activity-tabs">
-            <span className="tab active">SnapShot</span>
+            <button
+              className={activity === 'snapshot' ? 'tab active' : 'tab'}
+              onClick={() => setActivity('snapshot')}
+            >
+              SnapShot
+            </button>
+            <button
+              className={activity === 'encounters' ? 'tab active' : 'tab'}
+              onClick={() => setActivity('encounters')}
+            >
+              Encounters
+            </button>
           </nav>
-          <Snapshot problems={problems} allergies={allergies} labs={labs} />
+          {activity === 'snapshot' ? (
+            <Snapshot problems={problems} allergies={allergies} labs={labs} />
+          ) : (
+            <Encounters patientId={patient.id} careTeam={careTeam} pcpName={patient.pcpName} />
+          )}
         </section>
       </div>
     )

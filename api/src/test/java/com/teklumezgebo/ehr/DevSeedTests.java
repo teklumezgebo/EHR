@@ -26,7 +26,24 @@ class DevSeedTests {
 	/** Each seeded result must match exactly one reference range, or the join drops or doubles it. */
 	@Test
 	void seedsEveryLabResultOnce() {
-		assertThat(jdbc.queryForObject("select count(*) from observation", Integer.class)).isEqualTo(95);
+		assertThat(jdbc.queryForObject("select count(*) from observation where category = 'laboratory'", Integer.class))
+			.isEqualTo(95);
+	}
+
+	/** Nine readings for each of the four seeded visits, each linked to its encounter. */
+	@Test
+	void seedsVitalsForEachEncounter() {
+		assertThat(jdbc.queryForObject("""
+				select count(*) from observation where category = 'vital-signs' and encounter_id is not null
+				""", Integer.class)).isEqualTo(36);
+	}
+
+	@Test
+	void seedsSignedNotesOnSignedEncounters() {
+		assertThat(jdbc.queryForObject("""
+				select count(*) from note n join encounter e on e.id = n.encounter_id
+				where n.signed_at is not null and e.status = 'SIGNED'
+				""", Integer.class)).isEqualTo(4);
 	}
 
 }

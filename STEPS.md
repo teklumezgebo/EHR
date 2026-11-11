@@ -51,3 +51,13 @@ delegation is out of scope.
 ## 8. Frontend
 - [ ] Scaffold `web/` with Vite + React + TypeScript + Tailwind + TanStack Query.
 - [ ] Keycloak login, then the Storyboard sidebar reading `GET /api/patients/{id}`.
+
+## 9. Encounters
+- [x] `V6__note.sql`: per-author SOAP notes with a version column; `encounter.signed_by`.
+- [x] Routes under `/api/patients/{patientId}/encounters`: list, create, snapshot, vitals, note,
+      note sign, Sign Visit. Design notes in `ENCOUNTERS.md`.
+- [x] Validation runs after the access check, so rejected payloads are audited as ERROR.
+- [x] Seeded vitals and notes for the demo encounters.
+- [x] Frontend: Encounters activity tab with visit list, new encounter form, vitals flowsheet and entry,
+      per-author note editor, and Sign Visit.
+- [ ] Chart Review tab: encounters alongside labs and notes, filterable.

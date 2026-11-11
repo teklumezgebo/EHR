@@ -37,8 +37,8 @@ class AuditLog {
 
 	/** Records an access to one patient's PHI. */
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	void record(Authentication caller, PhiAccess access, UUID patientId, String outcome) {
-		insert(caller, access.action(), access.resourceType(), patientId.toString(), patientId, outcome);
+	void record(Authentication caller, PhiAccess access, UUID patientId, String resourceId, String outcome) {
+		insert(caller, access.action(), access.resourceType(), resourceId, patientId, outcome);
 	}
 
 	/** Records a read of the audit log itself, which spans all patients. */

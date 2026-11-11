@@ -24,4 +24,10 @@ public @interface PhiAccess {
 	/** Name of the parameter holding the patient id. */
 	String patientParam() default "patientId";
 
+	/**
+	 * Name of the parameter whose value is recorded as the audited resource_id. Empty records the
+	 * patient id. Records nested under an encounter (vitals, notes) name the encounter here.
+	 */
+	String resourceParam() default "";
+
 }

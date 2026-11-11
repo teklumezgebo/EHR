@@ -74,6 +74,8 @@ class PatientAccessTests {
 			.bodyJson()
 			.satisfies(chart -> {
 				assertThat(chart).extractingPath("$.patient.pcpName").isEqualTo("Test User");
+				// Active members only; otherPhysician is not on the team.
+				assertThat(chart).extractingPath("$.careTeam.length()").isEqualTo(2);
 				assertThat(chart).extractingPath("$.problems[0].icd10").isEqualTo("I10");
 				assertThat(chart).extractingPath("$.allergies[0].substance").isEqualTo("Penicillin");
 				// Only the latest result per LOINC code is returned.

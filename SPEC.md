@@ -78,7 +78,7 @@ Modules (Java packages): `patient`, `encounter`, `clinical` (problems, allergies
 | medication\_order | id, patient\_id, rxnorm, sig, status, prescriber\_id | MedicationRequest |
 | observation | id, patient\_id, encounter\_id, category, loinc, display, panel, value, unit, ref\_low, ref\_high, taken\_at | Observation (labs, vitals) |
 | immunization | id, patient\_id, cvx, given\_on | Immunization |
-| note | id, encounter\_id, author\_id, type (SOAP), body, signed\_at | DocumentReference |
+| note | id, encounter\_id, author\_id, type (PROGRESS or ROOMING), subjective, objective, assessment, plan, version, signed\_at | DocumentReference |
 | hm\_topic / hm\_status | rule definition; per-patient due/overdue/done | derived |
 | app\_user / care\_team\_member | user, role, dept; patient-provider relationship | Practitioner, CareTeam |
 | audit\_event | id, user\_id, action, resource\_type, resource\_id, patient\_id, ip, at, prev\_hash | AuditEvent |
@@ -93,8 +93,8 @@ Access is decided by role plus relationship: a user may perform an action only i
 | --- | --- | --- |
 | Read chart (Storyboard, Chart Review, results) | Yes | Yes |
 | Room a visit: reason for visit, vitals, allergies, medication review, HM updates | Yes | Yes |
-| Write and edit the visit note | Yes | No |
-| Sign an encounter | Yes | No |
+| Write, edit, and sign their own visit note (progress note for physicians, rooming note for MA/nurse) | Yes | Yes |
+| Sign an encounter (Sign Visit, once every note is signed) | Yes | Yes |
 | Place orders and add diagnoses | Yes | No |
 
 Every permission is checked per patient against the care team; a role alone never grants access.
